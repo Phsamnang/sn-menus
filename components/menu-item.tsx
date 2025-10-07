@@ -68,7 +68,7 @@ export function MenuItem({ item, onOrder, disabled }: MenuItemProps) {
         </div>
 
         <Button onClick={handleOrder} size="sm" className="w-full h-9" disabled={disabled || quantity === 0}>
-          Order
+         កម្មង់
         </Button>
       </div>
     </Card>

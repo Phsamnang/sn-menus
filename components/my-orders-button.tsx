@@ -60,7 +60,7 @@ export function MyOrdersButton() {
       <SheetTrigger asChild>
         <Button size="lg" className="fixed bottom-6 right-6 h-14 px-6 shadow-lg rounded-full">
           <Receipt className="h-5 w-5 mr-2" />
-          My Orders
+          ការកម្មង់ទីនេះ
           {pendingCount > 0 && (
             <Badge variant="secondary" className="ml-2 h-6 w-6 rounded-full p-0 flex items-center justify-center">
               {pendingCount}

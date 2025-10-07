@@ -1,13 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MenuHeader } from "@/components/menu-header";
 import { MenuItem } from "@/components/menu-item";
 import { MyOrdersButton } from "@/components/my-orders-button";
 import { useToast } from "@/hooks/use-toast";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Settings, Users } from "lucide-react";
 
 const menuItems = [
   {
@@ -79,6 +76,15 @@ const menuItems = [
 export default function MenuPage() {
   const { toast } = useToast();
   const [isOrdering, setIsOrdering] = useState(false);
+  const [dynamicMenuItems, setDynamicMenuItems] = useState(menuItems);
+
+  // Load menu items from localStorage on component mount
+  useEffect(() => {
+    const storedItems = JSON.parse(localStorage.getItem("menuItems") || "[]");
+    if (storedItems.length > 0) {
+      setDynamicMenuItems(storedItems);
+    }
+  }, []);
 
   const handleOrderItem = (item: (typeof menuItems)[0], quantity: number) => {
     if (isOrdering) return;
@@ -121,34 +127,16 @@ export default function MenuPage() {
   };
 
   const categories = Array.from(
-    new Set(menuItems.map((item) => item.category))
+    new Set(dynamicMenuItems.map((item) => item.category))
   );
   const itemsByCategory = categories.map((category) => ({
     category,
-    items: menuItems.filter((item) => item.category === category),
+    items: dynamicMenuItems.filter((item) => item.category === category),
   }));
 
   return (
     <div className="min-h-screen pb-8">
       <MenuHeader />
-
-      {/* Staff Access Buttons */}
-      <div className="container mx-auto px-4 py-2 max-w-6xl">
-        <div className="flex justify-end gap-2">
-          <Link href="/service">
-            <Button variant="outline" size="sm" className="mb-4">
-              <Users className="h-4 w-4 mr-2" />
-              Service Dashboard
-            </Button>
-          </Link>
-          <Link href="/seller">
-            <Button variant="outline" size="sm" className="mb-4">
-              <Settings className="h-4 w-4 mr-2" />
-              Seller Dashboard
-            </Button>
-          </Link>
-        </div>
-      </div>
 
       <main className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="space-y-8">

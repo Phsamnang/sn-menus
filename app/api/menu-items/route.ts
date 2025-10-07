@@ -11,6 +11,7 @@ export async function GET() {
 
     // Map to desired structure
     const mappedItems = menuItems.map((item) => ({
+      id: item.id,
       name: item.name,
       description: item.description,
       price: parseFloat(item.price.toString()), // convert Decimal to number

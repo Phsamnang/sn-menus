@@ -5,6 +5,8 @@ import { MenuHeader } from "@/components/menu-header";
 import { MenuItem } from "@/components/menu-item";
 import { MyOrdersButton } from "@/components/my-orders-button";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { menuItemService } from "@/service/menus-service";
 
 const menuItems = [
   {
@@ -77,7 +79,10 @@ export default function MenuPage() {
   const { toast } = useToast();
   const [isOrdering, setIsOrdering] = useState(false);
   const [dynamicMenuItems, setDynamicMenuItems] = useState(menuItems);
-
+  const { data: menus } = useQuery({
+    queryKey: ["menuItems"],
+    queryFn: () => menuItemService.getAll(),
+  });
   // Load menu items from localStorage on component mount
   useEffect(() => {
     const storedItems = JSON.parse(localStorage.getItem("menuItems") || "[]");
@@ -123,15 +128,15 @@ export default function MenuPage() {
       description: `${quantity}x ${item.name} ordered for Table ${tableNumber}`,
     });
 
-    setTimeout(() => setIsOrdering(false), 500);
+    setTimeout(() => setIsOrdering(false), 500);  
   };
 
   const categories = Array.from(
-    new Set(dynamicMenuItems.map((item) => item.category))
+    new Set(menus?.map((item) => item?.category))
   );
   const itemsByCategory = categories.map((category) => ({
     category,
-    items: dynamicMenuItems.filter((item) => item.category === category),
+    items: menus?.filter((item) => item?.category === category),
   }));
 
   return (
@@ -146,10 +151,10 @@ export default function MenuPage() {
                 {category}
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {items.map((item) => (
+                {items?.map((item) => (
                   <MenuItem
-                    key={item.id}
-                    item={item}
+                    key={item?.id}
+                    item={item as any }
                     onOrder={handleOrderItem}
                     disabled={isOrdering}
                   />

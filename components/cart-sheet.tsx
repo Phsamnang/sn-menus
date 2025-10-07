@@ -16,27 +16,49 @@ type CartSheetProps = {
 export function CartSheet({ isOpen, onClose, cart, onUpdateQuantity, totalPrice }: CartSheetProps) {
   if (!isOpen) return null
 
-  const handlePlaceOrder = () => {
-    const tableNumber = Math.floor(Math.random() * 20) + 1 // Simulate table number
-    const order = {
-      id: Date.now().toString(),
-      tableNumber,
-      items: cart,
-      totalPrice,
-      status: "pending",
-      timestamp: new Date().toISOString(),
+  const handlePlaceOrder = async () => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const tableNumber = urlParams.get("table") || "1"
+
+    try {
+      // Step 1: create empty order
+      const createRes = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tableNumber }),
+      })
+      if (!createRes.ok) {
+        const err = await createRes.json().catch(() => ({}))
+        throw new Error(err?.error || "Failed to create order")
+      }
+      const created = await createRes.json()
+
+      // Step 2: add items
+      const itemsPayload = {
+        items: cart.map((it) => ({
+          menuItemId: Number(it.id),
+          quantity: it.quantity,
+          price: it.price,
+        })),
+      }
+      const itemsRes = await fetch(`/api/orders/${created.id}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(itemsPayload),
+      })
+      if (!itemsRes.ok) {
+        const err = await itemsRes.json().catch(() => ({}))
+        throw new Error(err?.error || "Failed to add items to order")
+      }
+
+      alert(`Order placed successfully for Table ${tableNumber}! Your food will be ready soon.`)
+
+      // Clear cart
+      cart.forEach((item) => onUpdateQuantity(item.id, 0))
+      onClose()
+    } catch (e: any) {
+      alert(e?.message || "Failed to place order")
     }
-
-    // Get existing orders from localStorage
-    const existingOrders = JSON.parse(localStorage.getItem("restaurant_orders") || "[]")
-    existingOrders.push(order)
-    localStorage.setItem("restaurant_orders", JSON.stringify(existingOrders))
-
-    alert(`Order placed successfully for Table ${tableNumber}! Your food will be ready soon.`)
-
-    // Clear cart
-    cart.forEach((item) => onUpdateQuantity(item.id, 0))
-    onClose()
   }
 
   return (

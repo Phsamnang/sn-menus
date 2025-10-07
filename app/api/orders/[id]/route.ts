@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 // GET /api/orders/[id] - Get a specific order
 export async function GET(
@@ -89,6 +90,65 @@ export async function DELETE(
     console.error("Error deleting order:", error);
     return NextResponse.json(
       { error: "Failed to delete order" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/orders/[id]/items - Add items to an existing order and update total
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await request.json();
+    const { items } = body as {
+      items: Array<{ menuItemId: number; quantity: number; price: string | number }>;
+    };
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: "No items provided" }, { status: 400 });
+    }
+
+    // Validate order exists
+    const existingOrder = await prisma.order.findUnique({ where: { id: Number(params.id) } });
+    if (!existingOrder) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // Create items
+    await prisma.orderItem.createMany({
+      data: items.map((i) => ({
+        orderId: Number(params.id),
+        menuItemId: i.menuItemId,
+        quantity: i.quantity,
+        price: new Prisma.Decimal(i.price),
+      })),
+    });
+
+    // Recalculate total
+    const orderWithItems = await prisma.order.findUnique({
+      where: { id: Number(params.id) },
+      include: { items: true },
+    });
+
+    const newTotal = orderWithItems?.items.reduce((sum: Prisma.Decimal, item) => {
+      return sum.plus(item.price.times(item.quantity));
+    }, new Prisma.Decimal(0)) ?? new Prisma.Decimal(0);
+
+    const updated = await prisma.order.update({
+      where: { id: Number(params.id) },
+      data: { total: newTotal },
+      include: {
+        items: { include: { menuItem: true } },
+      },
+    });
+
+    return NextResponse.json(updated, { status: 201 });
+  } catch (error) {
+    console.error("Error adding items to order:", error);
+    return NextResponse.json(
+      { error: "Failed to add items to order" },
       { status: 500 }
     );
   }

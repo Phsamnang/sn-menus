@@ -17,33 +17,50 @@ export function PlaceOrderButton({ itemCount, totalPrice, orderItems, onOrderPla
 
   if (itemCount === 0) return null
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     setIsPlacing(true)
 
-    // Get table number from URL or default to 1
     const urlParams = new URLSearchParams(window.location.search)
     const tableNumber = urlParams.get("table") || "1"
 
-    // Create order object
-    const order = {
-      id: Date.now().toString(),
-      tableNumber,
-      items: orderItems,
-      total: totalPrice,
-      status: "pending" as const,
-      timestamp: new Date().toISOString(),
-    }
+    try {
+      // Step 1: create empty order
+      const createRes = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tableNumber }),
+      })
+      if (!createRes.ok) {
+        const err = await createRes.json().catch(() => ({}))
+        throw new Error(err?.error || "Failed to create order")
+      }
+      const created = await createRes.json()
 
-    // Save to localStorage for service page
-    const existingOrders = JSON.parse(localStorage.getItem("orders") || "[]")
-    localStorage.setItem("orders", JSON.stringify([...existingOrders, order]))
+      // Step 2: add items
+      const itemsPayload = {
+        items: orderItems.map((it) => ({
+          menuItemId: Number(it.id),
+          quantity: it.quantity,
+          price: it.price,
+        })),
+      }
+      const itemsRes = await fetch(`/api/orders/${created.id}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(itemsPayload),
+      })
+      if (!itemsRes.ok) {
+        const err = await itemsRes.json().catch(() => ({}))
+        throw new Error(err?.error || "Failed to add items to order")
+      }
 
-    // Show success state
-    setTimeout(() => {
-      setIsPlacing(false)
       onOrderPlaced()
       alert("Order placed successfully! Our staff will prepare your order shortly.")
-    }, 1000)
+    } catch (e: any) {
+      alert(e?.message || "Failed to place order")
+    } finally {
+      setIsPlacing(false)
+    }
   }
 
   return (

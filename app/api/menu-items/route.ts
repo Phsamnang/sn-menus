@@ -1,19 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { ApiResponse } from "@/lib/apiResponse";
 
 // GET /api/menu-items - Get all menu items
 export async function GET() {
   try {
     const menuItems = await prisma.menuItem.findMany({
-      orderBy: { createdAt: "desc" },
+      include: { category: true },
     });
-    return NextResponse.json(menuItems);
-  } catch (error) {
-    console.error("Error fetching menu items:", error);
+
+    // Map to desired structure
+    const mappedItems = menuItems.map((item) => ({
+      name: item.name,
+      description: item.description,
+      price: parseFloat(item.price.toString()), // convert Decimal to number
+      category: item.category.name, // map category object to string
+      image: item.image || null,
+    }));
+
     return NextResponse.json(
-      { error: "Failed to fetch menu items" },
-      { status: 500 }
+      ApiResponse.success(mappedItems, "Fetched menu items successfully")
     );
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(ApiResponse.error("Failed to fetch menu items"));
   }
 }
 

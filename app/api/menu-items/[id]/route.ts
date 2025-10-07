@@ -1,79 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
+import { ApiResponse } from "@/lib/apiResponse";
 
-// GET /api/menu-items/[id] - Get a specific menu item
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const menuItem = await prisma.menuItem.findUnique({
-      where: { id: params.id },
-    });
 
-    if (!menuItem) {
-      return NextResponse.json(
-        { error: "Menu item not found" },
-        { status: 404 }
-      );
-    }
+// GET example
 
-    return NextResponse.json(menuItem);
-  } catch (error) {
-    console.error("Error fetching menu item:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch menu item" },
-      { status: 500 }
-    );
-  }
-}
 
-// PUT /api/menu-items/[id] - Update a menu item
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// POST example
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description, price, category, image } = body;
+    const { name, description, price, categoryId } = body;
 
-    const menuItem = await prisma.menuItem.update({
-      where: { id: params.id },
+    if (!name || !description || !price || !categoryId) {
+      return NextResponse.json(ApiResponse.error("Missing required fields"));
+    }
+
+    const menuItem = await prisma.menuItem.create({
       data: {
         name,
         description,
-        price: parseFloat(price),
-        category,
-        image: image || null,
+        price: new Prisma.Decimal(price),
+        categoryId: parseInt(categoryId, 10),
       },
+      include: { category: true },
     });
 
-    return NextResponse.json(menuItem);
-  } catch (error) {
-    console.error("Error updating menu item:", error);
     return NextResponse.json(
-      { error: "Failed to update menu item" },
-      { status: 500 }
+      ApiResponse.success(menuItem, "Menu item created successfully")
     );
-  }
-}
-
-// DELETE /api/menu-items/[id] - Delete a menu item
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await prisma.menuItem.delete({
-      where: { id: params.id },
-    });
-
-    return NextResponse.json({ message: "Menu item deleted successfully" });
   } catch (error) {
-    console.error("Error deleting menu item:", error);
-    return NextResponse.json(
-      { error: "Failed to delete menu item" },
-      { status: 500 }
-    );
+    console.error(error);
+    return NextResponse.json(ApiResponse.error("Failed to create menu item"));
   }
 }

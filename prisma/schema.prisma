@@ -11,7 +11,7 @@ datasource db {
 }
 
 model Category {
-  id        String     @id @default(cuid())
+  id        Int        @id @default(autoincrement())
   name      String     @unique
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -23,7 +23,7 @@ model Category {
 }
 
 model MenuItem {
-  id          String     @id @default(cuid())
+  id          Int        @id @default(autoincrement())
   name        String
   description String
   price       Decimal    @db.Decimal(10,2)
@@ -32,7 +32,7 @@ model MenuItem {
   updatedAt   DateTime   @updatedAt
 
   // Relations
-  categoryId  String
+  categoryId  Int
   category    Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
 
@@ -40,7 +40,7 @@ model MenuItem {
 }
 
 model Table {
-  id         String       @id @default(cuid())
+  id         Int          @id @default(autoincrement())
   number     String       @unique // e.g. "T01", "A2"
   status     TableStatus  @default(AVAILABLE)
   createdAt  DateTime     @default(now())
@@ -53,7 +53,7 @@ model Table {
 }
 
 model Order {
-  id            String       @id @default(cuid())
+  id            Int          @id @default(autoincrement())
   total         Decimal      @db.Decimal(10,2)
   status        OrderStatus  @default(PENDING)
   paymentMethod String?
@@ -62,7 +62,7 @@ model Order {
   updatedAt     DateTime     @updatedAt
 
   // Relations
-  tableId       String
+  tableId       Int
   table         Table        @relation(fields: [tableId], references: [id], onDelete: Restrict)
   items         OrderItem[]
 
@@ -70,15 +70,15 @@ model Order {
 }
 
 model OrderItem {
-  id          String   @id @default(cuid())
+  id          Int       @id @default(autoincrement())
   quantity    Int
-  price       Decimal  @db.Decimal(10,2)
+  price       Decimal   @db.Decimal(10,2)
 
   // Relations
-  orderId     String
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  menuItemId  String
-  menuItem    MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  orderId     Int
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId  Int
+  menuItem    MenuItem  @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 
   @@map("order_items")
 }

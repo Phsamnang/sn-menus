@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MenuHeader } from "@/components/menu-header";
 import { MenuItem } from "@/components/menu-item";
 import { MyOrdersButton } from "@/components/my-orders-button";
@@ -78,18 +78,12 @@ const menuItems = [
 export default function MenuPage() {
   const { toast } = useToast();
   const [isOrdering, setIsOrdering] = useState(false);
-  const [dynamicMenuItems, setDynamicMenuItems] = useState(menuItems);
-  const { data: menus } = useQuery({
-    queryKey: ["menuItems"],
-    queryFn: () => menuItemService.getAll(),
-  });
-  // Load menu items from localStorage on component mount
-  useEffect(() => {
-    const storedItems = JSON.parse(localStorage.getItem("menuItems") || "[]");
-    if (storedItems.length > 0) {
-      setDynamicMenuItems(storedItems);
-    }
-  }, []);
+
+
+  const {data:items, isLoading} = useQuery({
+    queryKey: ["menu-items"],
+    queryFn: async () => await menuItemService.getAll(),
+  })
 
   const handleOrderItem = (item: (typeof menuItems)[0], quantity: number) => {
     if (isOrdering) return;
@@ -128,37 +122,43 @@ export default function MenuPage() {
       description: `${quantity}x ${item.name} ordered for Table ${tableNumber}`,
     });
 
-    setTimeout(() => setIsOrdering(false), 500);  
+    setTimeout(() => setIsOrdering(false), 500);
   };
 
   const categories = Array.from(
-    new Set(menus?.map((item) => item?.category))
+    new Set(items?.map((item) => item.category))
   );
   const itemsByCategory = categories.map((category) => ({
     category,
-    items: menus?.filter((item) => item?.category === category),
+    items: items?.filter((item) => item.category === category),
   }));
 
   return (
-    <div className="min-h-screen pb-8">
+    <div className="min-h-screen pb-24">
       <MenuHeader />
 
-      <main className="container mx-auto px-4 py-6 max-w-6xl">
-        <div className="space-y-8">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-6xl">
+        <div className="space-y-6 sm:space-y-8">
           {itemsByCategory.map(({ category, items }) => (
             <section key={category}>
-              <h2 className="text-2xl font-bold mb-4 text-balance">
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-balance px-1">
                 {category}
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {items?.map((item) => (
-                  <MenuItem
-                    key={item?.id}
-                    item={item as any }
-                    onOrder={handleOrderItem}
-                    disabled={isOrdering}
-                  />
-                ))}
+              <div className="overflow-x-auto -mx-3 sm:-mx-4 px-3 sm:px-4 pb-2">
+                <div className="flex gap-3 sm:gap-4 min-w-min">
+                  {items?.map((item) => (
+                    <div
+                      key={item.id}
+                      className="w-[280px] sm:w-[300px] flex-shrink-0"
+                    >
+                      <MenuItem
+                        item={item}
+                        onOrder={handleOrderItem}
+                        disabled={isOrdering}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </section>
           ))}

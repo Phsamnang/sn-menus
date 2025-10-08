@@ -57,9 +57,6 @@ export function MyOrdersButton({orders}: {orders?: any}) {
 
   // }, [open])
 
-  console.log(orders,"orders")
-
-
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -86,7 +83,7 @@ export function MyOrdersButton({orders}: {orders?: any}) {
             </div>
           ) : (
           
-                <Card key={orders.id} className="p-6 bg-background">
+                <Card key={orders?.id} className="p-6 bg-background">
                   <div className="text-center mb-6 pb-4 border-b-2 border-dashed">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Receipt className="h-5 w-5" />

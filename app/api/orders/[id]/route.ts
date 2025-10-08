@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { OrderStatus, Prisma } from "@prisma/client";
+import { ApiResponse } from "@/lib/apiResponse";
 
 // GET /api/orders/[id] - Get a specific order
 export async function GET(
@@ -9,10 +10,10 @@ export async function GET(
 ) {
   try {
     const order = await prisma.order.findUnique({
-      where: { id: params.id },
+      where: { id: parseInt(params.id) },
       include: {
         items: {
-          include: {
+          include: {  
             menuItem: true,
           },
         },
@@ -20,16 +21,13 @@ export async function GET(
     });
 
     if (!order) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+      return NextResponse.json(ApiResponse.error("Order not found"));
     }
 
-    return NextResponse.json(order);
+    return NextResponse.json(ApiResponse.success(order, "Order fetched successfully"));
   } catch (error) {
     console.error("Error fetching order:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch order" },
-      { status: 500 }
-    );
+    return NextResponse.json(ApiResponse.error("Failed to fetch order"));
   }
 }
 
@@ -42,19 +40,19 @@ export async function PUT(
     const body = await request.json();
     const { status, paymentMethod } = body;
 
-    const updateData: any = {};
+    const updateData: Prisma.OrderUpdateInput = {};
 
     if (status) {
-      updateData.status = status;
+      updateData.status = status as OrderStatus;
     }
 
     if (paymentMethod) {
-      updateData.paymentMethod = paymentMethod;
+      updateData.paymentMethod = paymentMethod as string    | undefined;
       updateData.paymentTime = new Date();
     }
 
     const order = await prisma.order.update({
-      where: { id: params.id },
+      where: { id: parseInt(params.id) },
       data: updateData,
       include: {
         items: {
@@ -65,33 +63,26 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(order);
+    return NextResponse.json(ApiResponse.success(order, "Order updated successfully"));
   } catch (error) {
     console.error("Error updating order:", error);
-    return NextResponse.json(
-      { error: "Failed to update order" },
-      { status: 500 }
-    );
+    return NextResponse.json(ApiResponse.error("Failed to update order"));
   }
 }
 
 // DELETE /api/orders/[id] - Delete an order
 export async function DELETE(
-  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     await prisma.order.delete({
-      where: { id: params.id },
+      where: { id: parseInt(params.id) },
     });
 
-    return NextResponse.json({ message: "Order deleted successfully" });
+    return NextResponse.json(ApiResponse.success("Order deleted successfully"));
   } catch (error) {
     console.error("Error deleting order:", error);
-    return NextResponse.json(
-      { error: "Failed to delete order" },
-      { status: 500 }
-    );
+    return NextResponse.json(ApiResponse.error("Failed to delete order"));
   }
 }
 
@@ -102,24 +93,22 @@ export async function POST(
 ) {
   try {
     const body = await request.json();
-    const { items } = body as {
-      items: Array<{ menuItemId: number; quantity: number; price: string | number }>;
-    };
+    const { items } = body;
 
     if (!Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: "No items provided" }, { status: 400 });
+      return NextResponse.json(ApiResponse.error("No items provided"));
     }
 
     // Validate order exists
-    const existingOrder = await prisma.order.findUnique({ where: { id: Number(params.id) } });
+    const existingOrder = await prisma.order.findUnique({ where: { id: parseInt(params.id) } });
     if (!existingOrder) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+      return NextResponse.json(ApiResponse.error("Order not found"));
     }
 
     // Create items
     await prisma.orderItem.createMany({
       data: items.map((i) => ({
-        orderId: Number(params.id),
+        orderId: parseInt(params.id),
         menuItemId: i.menuItemId,
         quantity: i.quantity,
         price: new Prisma.Decimal(i.price),
@@ -128,7 +117,7 @@ export async function POST(
 
     // Recalculate total
     const orderWithItems = await prisma.order.findUnique({
-      where: { id: Number(params.id) },
+      where: { id: parseInt(params.id) },
       include: { items: true },
     });
 
@@ -137,19 +126,16 @@ export async function POST(
     }, new Prisma.Decimal(0)) ?? new Prisma.Decimal(0);
 
     const updated = await prisma.order.update({
-      where: { id: Number(params.id) },
+      where: { id: parseInt(params.id) },
       data: { total: newTotal },
       include: {
         items: { include: { menuItem: true } },
       },
     });
 
-    return NextResponse.json(updated, { status: 201 });
+    return NextResponse.json(ApiResponse.success(updated, "Items added to order successfully"));
   } catch (error) {
     console.error("Error adding items to order:", error);
-    return NextResponse.json(
-      { error: "Failed to add items to order" },
-      { status: 500 }
-    );
+    return NextResponse.json(ApiResponse.error("Failed to add items to order"));
   }
 }

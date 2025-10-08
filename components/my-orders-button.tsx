@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Receipt, Clock, CheckCircle2 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+import { useQuery } from "@tanstack/react-query"
+import { orderService } from "@/service/order-service"
 
 type Order = {
   id: string
@@ -23,37 +25,40 @@ type Order = {
   timestamp: string
 }
 
-export function MyOrdersButton() {
-  const [orders, setOrders] = useState<Order[]>([])
+export function MyOrdersButton({orders}: {orders?: any}) {
+  //const [orders, setOrders] = useState<Order[]>([])
   const [open, setOpen] = useState(false)
 
-  useEffect(() => {
-    const loadOrders = () => {
-      const urlParams = new URLSearchParams(window.location.search)
-      const tableNumber = urlParams.get("table") || "1"
 
-      const allOrders = JSON.parse(localStorage.getItem("orders") || "[]")
-      const myOrders = allOrders.filter((order: Order) => order.tableNumber === tableNumber)
-      setOrders(myOrders)
-    }
+  // useEffect(() => {
+  //   const loadOrders = () => {
+  //     const urlParams = new URLSearchParams(window.location.search)
+  //     const tableNumber = urlParams.get("table") || "1"
 
-    loadOrders()
+  //     const allOrders = JSON.parse(localStorage.getItem("orders") || "[]")
+  //     const myOrders = allOrders.filter((order: Order) => order.tableNumber === tableNumber)
+  //     setOrders(myOrders)
+  //   }
 
-    // Refresh orders when sheet is opened
-    if (open) {
-      loadOrders()
-    }
+  //   loadOrders()
 
-    // Listen for storage changes
-    const handleStorageChange = () => {
-      loadOrders()
-    }
+  //   // Refresh orders when sheet is opened
+  //   if (open) {
+  //     loadOrders()
+  //   }
 
-    window.addEventListener("storage", handleStorageChange)
-    return () => window.removeEventListener("storage", handleStorageChange)
-  }, [open])
+  //   // Listen for storage changes
+  //   const handleStorageChange = () => {
+  //     loadOrders()
+  //   }
 
-  const pendingCount = orders.filter((order) => order.status === "pending").length
+  //   window.addEventListener("storage", handleStorageChange)
+  //   return () => window.removeEventListener("storage", handleStorageChange)
+
+  // }, [open])
+
+  console.log(orders,"orders")
+
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -61,11 +66,11 @@ export function MyOrdersButton() {
         <Button size="lg" className="fixed bottom-6 right-6 h-14 px-6 shadow-lg rounded-full">
           <Receipt className="h-5 w-5 mr-2" />
           ការកម្មង់ទីនេះ
-          {pendingCount > 0 && (
+          {/* {pendingCount > 0 && (
             <Badge variant="secondary" className="ml-2 h-6 w-6 rounded-full p-0 flex items-center justify-center">
               {pendingCount}
             </Badge>
-          )}
+          )} */}
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
@@ -74,26 +79,24 @@ export function MyOrdersButton() {
         </SheetHeader>
 
         <div className="mt-6 space-y-4">
-          {orders.length === 0 ? (
+          {orders?.items?.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Receipt className="h-12 w-12 mx-auto mb-3 opacity-50" />
               <p>No orders yet</p>
             </div>
           ) : (
-            orders
-              .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-              .map((order) => (
-                <Card key={order.id} className="p-6 bg-background">
+          
+                <Card key={orders.id} className="p-6 bg-background">
                   <div className="text-center mb-6 pb-4 border-b-2 border-dashed">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Receipt className="h-5 w-5" />
                       <h3 className="font-bold text-lg">ORDER RECEIPT</h3>
                     </div>
-                    <p className="text-sm text-muted-foreground">Order #{order.id.slice(-6)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{new Date(order.timestamp).toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">Order #{orders?.id}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{new Date(orders?.updatedAt).toLocaleString()}</p>
                     <div className="mt-3 flex justify-center">
-                      <Badge variant={order.status === "pending" ? "default" : "secondary"}>
-                        {order.status === "pending" ? (
+                      <Badge variant={orders?.status === "PENDING" ? "default" : "secondary"}>
+                        {orders?.status === "PENDING" ? (
                           <>
                             <Clock className="h-3 w-3 mr-1" />
                             Pending
@@ -113,16 +116,16 @@ export function MyOrdersButton() {
                       <span>ITEM</span>
                       <span>AMOUNT</span>
                     </div>
-                    {order.items.map((item, index) => (
+                    {orders?.items?.map((item: any, index: number) => (
                       <div key={index} className="py-2">
                         <div className="flex justify-between items-start mb-1">
                           <div className="flex-1">
                             <p className="font-medium text-sm">{item.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              ${item.price.toFixed(2)} × {item.quantity}
+                              ${item.price} × {item.quantity}
                             </p>
                           </div>
-                          <p className="font-semibold text-sm ml-4">${(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="font-semibold text-sm ml-4">${(item.price * item.quantity)}</p>
                         </div>
                       </div>
                     ))}
@@ -133,14 +136,14 @@ export function MyOrdersButton() {
                   <div className="space-y-2 px-1">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span className="font-medium">${order.total.toFixed(2)}</span>
+                      <span className="font-medium">${orders?.total}</span>
                     </div>
 
                     <Separator className="my-3" />
 
                     <div className="flex justify-between items-center pt-2 pb-1">
                       <span className="font-bold text-lg">TOTAL TO PAY</span>
-                      <span className="font-bold text-2xl text-primary">${order.total.toFixed(2)}</span>
+                      <span className="font-bold text-2xl text-primary">${orders?.total}</span>
                     </div>
                   </div>
 
@@ -148,7 +151,6 @@ export function MyOrdersButton() {
                     <p className="text-xs text-muted-foreground">Thank you for your order!</p>
                   </div>
                 </Card>
-              ))
           )}
         </div>
       </SheetContent>

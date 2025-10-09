@@ -119,9 +119,6 @@ export default function MenuPage() {
           ))}
         </div>
       </main>
-
-      
-
       <MyOrdersButton orders={orders} />
     </div>
   );

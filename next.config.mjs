@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  useFileSystemPublicRoutes: false,
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -9,6 +10,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-}
+};
 
 export default nextConfig

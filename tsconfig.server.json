@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "outDir": "./dist",
+    "noEmit": false,
+    "isolatedModules": false,
+    "esModuleInterop": true
+  },
+  "include": ["server.mts", "lib/socketServer.ts"],
+  "exclude": ["node_modules", ".next", "dist"]
+}

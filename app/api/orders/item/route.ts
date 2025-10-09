@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { ApiResponse } from "@/lib/apiResponse";
 import { OrderStatus, Prisma, TableStatus } from "@prisma/client";
+import { getIO } from "@/lib/socketServer";
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
         },
       },
     });
-
+    getIO().emit("order-item-created", orderItem);
     return NextResponse.json(
       ApiResponse.success(orderItem, "Order item successfully created", 200)
     );

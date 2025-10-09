@@ -52,12 +52,6 @@ export default function AddMenuPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load existing menu items on component mount
-  useState(() => {
-    const storedItems = JSON.parse(localStorage.getItem("menuItems") || "[]");
-    setMenuItems(storedItems);
-  });
-
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,

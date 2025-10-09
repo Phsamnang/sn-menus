@@ -9,6 +9,9 @@ import { menuItemService } from "@/service/menus-service";
 import { useToast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
 import { orderService } from "@/service/order-service";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:3000");
 
 export default function MenuPage() {
   const [isOrdering, setIsOrdering] = useState(false);
@@ -49,6 +52,12 @@ export default function MenuPage() {
 
   const params = useParams();
 
+  useEffect(() => {
+    socket.on("order-item-created", (orderItem: any) => {
+      console.log(orderItem);
+    });
+  }, []);
+
 
   useEffect(() => {
     const createOrder = async () => {
@@ -72,12 +81,9 @@ export default function MenuPage() {
     items: items?.filter((item: any) => item.category === category),
   }));
 
-  
     if (isLoading || isOrdersLoading) {
       return <div>Loading...</div>;
     }
-
-  console.log(orders,"orders page")
 
   return (
     <div className="min-h-screen pb-24">

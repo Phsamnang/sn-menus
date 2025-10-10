@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Check, Clock, RefreshCw } from "lucide-react"
 import Image from "next/image"
+import { useQuery } from "@tanstack/react-query"
+import { orderService } from "@/service/order-service"
 
 type Order = {
   id: string
@@ -29,6 +31,17 @@ export default function ServicePage() {
     const storedOrders = JSON.parse(localStorage.getItem("orders") || "[]")
     setOrders(storedOrders)
   }
+
+
+  const orderItem=useQuery({
+    queryFn:()=>orderService.getOrderItem(),
+    queryKey:['order-items']
+  })
+
+
+
+  console.log("data",orderItem)
+
 
   useEffect(() => {
     loadOrders()
@@ -92,7 +105,7 @@ export default function ServicePage() {
             <div className="space-y-4">
               {pendingOrders.length === 0 ? (
                 <Card className="p-8 text-center">
-                  <p className="text-muted-foreground">No pending orders</p>
+                  <p className="text-muted-foreground">No pending ordersdrdsddsds</p>
                 </Card>
               ) : (
                 pendingOrders.map((order) => (

@@ -73,6 +73,7 @@ model OrderItem {
   id          Int       @id @default(autoincrement())
   quantity    Int
   price       Decimal   @db.Decimal(10,2)
+  totalPrice  Decimal   @db.Decimal(10,2)
   status      ItemStatus @default(PENDING)
   // Relations
   orderId     Int

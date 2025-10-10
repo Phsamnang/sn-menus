@@ -12,7 +12,8 @@ export async function POST(req: Request) {
         orderId,
         menuItemId,
         quantity,
-        price: new Prisma.Decimal(price).times(quantity),
+        price,
+        totalPrice:new Prisma.Decimal(price).times(quantity)
       },
     });
     await prisma.order.update({

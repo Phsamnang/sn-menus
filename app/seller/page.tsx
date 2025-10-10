@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { orderService } from "@/service/order-service";
 
 type Order = {
   id: string;
@@ -55,6 +57,10 @@ export default function SellerPage() {
     const storedOrders = JSON.parse(localStorage.getItem("orders") || "[]");
     setOrders(storedOrders);
   };
+
+
+   
+
 
   useEffect(() => {
     loadOrders();
@@ -114,6 +120,9 @@ export default function SellerPage() {
   const paidOrders = filteredOrders.filter((order) => order.status === "paid");
 
   const totalRevenue = paidOrders.reduce((sum, order) => sum + order.total, 0);
+
+
+  console.log("Data working ........")
 
   return (
     <div className="min-h-screen bg-muted/30">

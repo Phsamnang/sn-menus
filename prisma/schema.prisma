@@ -73,7 +73,7 @@ model OrderItem {
   id          Int       @id @default(autoincrement())
   quantity    Int
   price       Decimal   @db.Decimal(10,2)
-
+  status      ItemStatus @default(PENDING)
   // Relations
   orderId     Int
   order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -93,5 +93,12 @@ enum TableStatus {
   AVAILABLE
   OCCUPIED
   RESERVED
+}
+
+enum ItemStatus {
+  PENDING
+  PROCESSING
+  READY
+  SERVED
 }
 

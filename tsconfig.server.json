@@ -2,13 +2,13 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "lib": ["ES2022"],
     "target": "ES2022",
-    "outDir": "./dist",
-    "noEmit": false,
     "isolatedModules": false,
+    "noEmit": false,
     "esModuleInterop": true
   },
-  "include": ["server.mts", "lib/socketServer.ts"],
-  "exclude": ["node_modules", ".next", "dist"]
+  "include": ["server.ts", "lib/**/*.ts"]
 }

@@ -27,6 +27,7 @@ import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { orderService } from "@/service/order-service";
+import { menuItemService } from "@/service/menus-service";
 
 type Order = {
   id: string;
@@ -58,6 +59,15 @@ export default function SellerPage() {
     setOrders(storedOrders);
   };
 
+
+
+  const {data:items, isLoading} = useQuery({
+    queryKey: ["order-items"],
+    queryFn:  () => orderService.getOrderItem(),
+  })
+
+
+  console.log("items",items)
 
    
 
@@ -94,7 +104,7 @@ export default function SellerPage() {
   };
 
   const clearPaidOrders = () => {
-    const activeOrders = orders.filter((order) => order.status !== "paid");
+    const activeOrders = orders?.filter((order:any) => order.status !== "paid");
     setOrders(activeOrders);
     localStorage.setItem("orders", JSON.stringify(activeOrders));
 
@@ -104,15 +114,15 @@ export default function SellerPage() {
     });
   };
 
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = orders?.filter((order) => {
     const matchesSearch =
       order.tableNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.id.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
-  const pendingOrders = filteredOrders.filter(
-    (order) => order.status === "pending"
+  const pendingOrders = items?.filter(
+    (order:any) => order.status === "PENDING"
   );
   const completedOrders = filteredOrders.filter(
     (order) => order.status === "completed"
@@ -121,8 +131,6 @@ export default function SellerPage() {
 
   const totalRevenue = paidOrders.reduce((sum, order) => sum + order.total, 0);
 
-
-  console.log("Data working ........")
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -192,7 +200,7 @@ export default function SellerPage() {
                 <Clock className="h-5 w-5 text-orange-500" />
                 <div>
                   <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-2xl font-bold">{pendingOrders.length}</p>
+                  <p className="text-2xl font-bold">{pendingOrders?.length}</p>
                 </div>
               </div>
             </Card>
@@ -224,17 +232,17 @@ export default function SellerPage() {
               <Clock className="h-5 w-5 text-orange-500" />
               <h2 className="text-xl font-bold">
                 Pending Orders{" "}
-                <Badge variant="secondary">{pendingOrders.length}</Badge>
+                <Badge variant="secondary">{pendingOrders?.length}</Badge>
               </h2>
             </div>
 
             <div className="space-y-4">
-              {pendingOrders.length === 0 ? (
+              {pendingOrders?.length === 0 ? (
                 <Card className="p-8 text-center">
                   <p className="text-muted-foreground">No pending orders</p>
                 </Card>
               ) : (
-                pendingOrders.map((order) => (
+                pendingOrders?.map((order:any) => (
                   <Card key={order.id} className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -253,8 +261,8 @@ export default function SellerPage() {
                       </Badge>
                     </div>
 
-                    <div className="space-y-2 mb-4">
-                      {order.items.map((item) => (
+                    {/* <div className="space-y-2 mb-4">
+                      {order.items?.map((item:any) => (
                         <div key={item.id} className="flex items-center gap-3">
                           <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
                             <Image
@@ -277,11 +285,11 @@ export default function SellerPage() {
                           </p>
                         </div>
                       ))}
-                    </div>
+                    </div> */}
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-3 border-t border-border gap-2">
                       <p className="font-bold">
-                        Total: ${order.total.toFixed(2)}
+                        {/* Total: ${order.total.toFixed(2)} */}
                       </p>
                       <Button
                         size="sm"

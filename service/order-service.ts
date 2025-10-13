@@ -9,7 +9,7 @@ export const orderService = {
     const response = await axios.get(`/api/orders/${orderId}/item`);
     return response.data.data;
   },
-  async getOrderItem():Promise<any>{
+  async  getOrderItem():Promise<any>{
      const response =await axios.get('/api/service')
      return response.data.data;
      }

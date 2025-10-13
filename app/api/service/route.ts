@@ -1,3 +1,4 @@
+import { ApiResponse } from "@/lib/apiResponse";
 import { prisma } from "@/lib/prisma";
 import { ItemStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
@@ -13,17 +14,29 @@ export async function GET() {
       },
       include:{
         menuItem:true,
-        order:true
+        order:{
+          include:{
+            table:true
+          }
+        }
       }
     });
 
-    return NextResponse.json(service);
+    
+
+    const mappedItems = service.map((item) => ({
+      id: item.id,
+      quantity: item.quantity,
+      status: item.status,
+      image: item.menuItem.image,
+      tableNumber: item.order.table.number,
+      name: item.menuItem.name,
+      paymentStatus: item.order.status,
+    }));
+    return NextResponse.json( ApiResponse.success(mappedItems, "Fetched pending menu items successfully"));
   } catch (error) {
     console.error("Error fetching pending menu items:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch pending menu items" },
-      { status: 500 }
-    );
+    return NextResponse.json(ApiResponse.error("Failed to fetch pending menu items"));
   }
 }
 export async function POST(request: Request) {

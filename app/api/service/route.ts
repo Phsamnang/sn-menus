@@ -53,8 +53,6 @@ export async function GET() {
       timestamp: order.createdAt,
     }));
 
-    console.log("mainResult",mainResult)
-
     return NextResponse.json( ApiResponse.success(mainResult, "Fetched pending menu items successfully"));
   } catch (error) {
     console.error("Error fetching pending menu items:", error);

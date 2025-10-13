@@ -1,6 +1,6 @@
 import { ApiResponse } from "@/lib/apiResponse";
 import { prisma } from "@/lib/prisma";
-import { ItemStatus } from "@prisma/client";
+import { ItemStatus, OrderStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -22,18 +22,40 @@ export async function GET() {
       }
     });
 
-    
 
+    const order = await prisma.order.findMany({
+      where:{
+        status:OrderStatus.PENDING
+      },
+      include:{
+        table:true
+      }
+    });
+    
     const mappedItems = service.map((item) => ({
       id: item.id,
       quantity: item.quantity,
+      price: item.price,
       status: item.status,
       image: item.menuItem.image,
       tableNumber: item.order.table.number,
       name: item.menuItem.name,
       paymentStatus: item.order.status,
+      timestamp: item.order.createdAt,
+      total:item.order.total,
     }));
-    return NextResponse.json( ApiResponse.success(mappedItems, "Fetched pending menu items successfully"));
+
+    const mainResult = order.map((order) => ({
+      tableName:order.table.number,
+      paymentStatus:order.status,
+      total:order.total,
+      items:mappedItems.filter((item) => item.tableNumber === order.table.number),
+      timestamp: order.createdAt,
+    }));
+
+    console.log("mainResult",mainResult)
+
+    return NextResponse.json( ApiResponse.success(mainResult, "Fetched pending menu items successfully"));
   } catch (error) {
     console.error("Error fetching pending menu items:", error);
     return NextResponse.json(ApiResponse.error("Failed to fetch pending menu items"));

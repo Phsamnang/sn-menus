@@ -54,30 +54,11 @@ export default function SellerPage() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
-  const loadOrders = () => {
-    const storedOrders = JSON.parse(localStorage.getItem("orders") || "[]");
-    setOrders(storedOrders);
-  };
-
-
 
   const {data:items, isLoading} = useQuery({
     queryKey: ["order-items"],
     queryFn:  () => orderService.getOrderItem(),
-  })
-
-
-  console.log("items",items)
-
-   
-
-
-  useEffect(() => {
-    loadOrders();
-    // Auto-refresh every 3 seconds
-    const interval = setInterval(loadOrders, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  })   
 
   const markAsPaid = (orderId: string, method: string) => {
     const updatedOrders = orders.map((order) =>
@@ -114,22 +95,22 @@ export default function SellerPage() {
     });
   };
 
-  const filteredOrders = orders?.filter((order) => {
+  const filteredOrders = items?.filter((order:any) => {
     const matchesSearch =
-      order.tableNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.tableName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.id.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
   const pendingOrders = items?.filter(
-    (order:any) => order.status === "PENDING"
+    (order:any) => order.paymentStatus === "PENDING"
   );
-  const completedOrders = filteredOrders.filter(
-    (order) => order.status === "completed"
+  const completedOrders = filteredOrders?.filter(
+    (order:any) => order.paymentStatus === "completed"
   );
-  const paidOrders = filteredOrders.filter((order) => order.status === "paid");
+  const paidOrders = filteredOrders?.filter((order:any) => order.status === "paid");
 
-  const totalRevenue = paidOrders.reduce((sum, order) => sum + order.total, 0);
+  const totalRevenue = paidOrders?.reduce((sum:any, order:any) => sum + order.total, 0);
 
 
   return (
@@ -149,20 +130,20 @@ export default function SellerPage() {
               <div className="flex items-center gap-2 justify-center sm:justify-start">
                 <DollarSign className="h-4 w-4 text-green-600" />
                 <span className="font-semibold text-green-600">
-                  ${totalRevenue.toFixed(2)}
+                  ${totalRevenue}
                 </span>
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={loadOrders}
+              
                   className="flex-1 sm:flex-none"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">Refresh</span>
                 </Button>
-                {paidOrders.length > 0 && (
+                {paidOrders?.length > 0 || paidOrders?.length === undefined && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -209,7 +190,7 @@ export default function SellerPage() {
                 <Check className="h-5 w-5 text-blue-500" />
                 <div>
                   <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold">{completedOrders.length}</p>
+                  <p className="text-2xl font-bold">{completedOrders?.length}</p>
                 </div>
               </div>
             </Card>
@@ -218,7 +199,7 @@ export default function SellerPage() {
                 <CreditCard className="h-5 w-5 text-green-500" />
                 <div>
                   <p className="text-sm text-muted-foreground">Paid</p>
-                  <p className="text-2xl font-bold">{paidOrders.length}</p>
+                  <p className="text-2xl font-bold">{paidOrders?.length}</p>
                 </div>
               </div>
             </Card>
@@ -237,7 +218,7 @@ export default function SellerPage() {
             </div>
 
             <div className="space-y-4">
-              {pendingOrders?.length === 0 ? (
+              {pendingOrders?.length === 0 || pendingOrders?.length === undefined ? (
                 <Card className="p-8 text-center">
                   <p className="text-muted-foreground">No pending orders</p>
                 </Card>
@@ -247,7 +228,7 @@ export default function SellerPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="text-lg font-bold">
-                          Table {order.tableNumber}
+                          Table {order.tableName}
                         </h3>
                         <p className="text-xs text-muted-foreground">
                           {new Date(order.timestamp).toLocaleTimeString()}
@@ -261,7 +242,7 @@ export default function SellerPage() {
                       </Badge>
                     </div>
 
-                    {/* <div className="space-y-2 mb-4">
+                    <div className="space-y-2 mb-4">
                       {order.items?.map((item:any) => (
                         <div key={item.id} className="flex items-center gap-3">
                           <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
@@ -281,15 +262,15 @@ export default function SellerPage() {
                             </p>
                           </div>
                           <p className="text-sm font-semibold text-right">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            ${(item.price * item.quantity)}
                           </p>
                         </div>
                       ))}
-                    </div> */}
+                    </div>
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-3 border-t border-border gap-2">
                       <p className="font-bold">
-                        {/* Total: ${order.total.toFixed(2)} */}
+                        Total: ${order?.total}
                       </p>
                       <Button
                         size="sm"
@@ -312,19 +293,19 @@ export default function SellerPage() {
               <Check className="h-5 w-5 text-blue-500" />
               <h2 className="text-xl font-bold">
                 Ready for Payment{" "}
-                <Badge variant="secondary">{completedOrders.length}</Badge>
+                <Badge variant="secondary">{completedOrders?.length}</Badge>
               </h2>
             </div>
 
             <div className="space-y-4">
-              {completedOrders.length === 0 ? (
+              {completedOrders?.length === 0 || completedOrders?.length === undefined ? (
                 <Card className="p-8 text-center">
                   <p className="text-muted-foreground">
                     No orders ready for payment
                   </p>
                 </Card>
               ) : (
-                completedOrders.map((order) => (
+                completedOrders?.map((order:any) => (
                   <Card key={order.id} className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -344,7 +325,7 @@ export default function SellerPage() {
                     </div>
 
                     <div className="space-y-2 mb-4">
-                      {order.items.map((item) => (
+                      {order.items.map((item:any) => (
                         <div key={item.id} className="flex items-center gap-3">
                           <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
                             <Image
@@ -363,7 +344,7 @@ export default function SellerPage() {
                             </p>
                           </div>
                           <p className="text-sm font-semibold text-right">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            ${(item.price * item.quantity)}
                           </p>
                         </div>
                       ))}
@@ -371,7 +352,7 @@ export default function SellerPage() {
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-3 border-t border-border gap-2">
                       <p className="font-bold">
-                        Total: ${order.total.toFixed(2)}
+                        Total: ${order.total}
                       </p>
                       <Dialog
                         open={
@@ -401,7 +382,7 @@ export default function SellerPage() {
                                 Order Summary
                               </h4>
                               <div className="space-y-1">
-                                {order.items.map((item) => (
+                                {order.items.map((item:any) => (
                                   <div
                                     key={item.id}
                                     className="flex justify-between text-sm"
@@ -410,7 +391,7 @@ export default function SellerPage() {
                                       {item.name} × {item.quantity}
                                     </span>
                                     <span>
-                                      ${(item.price * item.quantity).toFixed(2)}
+                                      ${(item.price * item.quantity)}
                                     </span>
                                   </div>
                                 ))}
@@ -418,7 +399,7 @@ export default function SellerPage() {
                               <Separator className="my-2" />
                               <div className="flex justify-between font-bold">
                                 <span>Total</span>
-                                <span>${order.total.toFixed(2)}</span>
+                                <span>${order.total}</span>
                               </div>
                             </div>
 
@@ -499,17 +480,17 @@ export default function SellerPage() {
               <CreditCard className="h-5 w-5 text-green-500" />
               <h2 className="text-xl font-bold">
                 Paid Orders{" "}
-                <Badge variant="secondary">{paidOrders.length}</Badge>
+                <Badge variant="secondary">{paidOrders?.length}</Badge>
               </h2>
             </div>
 
             <div className="space-y-4">
-              {paidOrders.length === 0 ? (
+              {paidOrders?.length === 0 || paidOrders?.length === undefined ? (
                 <Card className="p-8 text-center">
                   <p className="text-muted-foreground">No paid orders</p>
                 </Card>
               ) : (
-                paidOrders.map((order) => (
+                paidOrders?.map((order:any) => (
                   <Card key={order.id} className="p-4 opacity-75">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -532,7 +513,7 @@ export default function SellerPage() {
                     </div>
 
                     <div className="space-y-2 mb-4">
-                      {order.items.map((item) => (
+                      {order.items.map((item:any) => (
                         <div key={item.id} className="flex items-center gap-3">
                           <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
                             <Image
@@ -551,7 +532,7 @@ export default function SellerPage() {
                             </p>
                           </div>
                           <p className="text-sm font-semibold text-right">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            ${(item.price * item.quantity)}
                           </p>
                         </div>
                       ))}
@@ -559,7 +540,7 @@ export default function SellerPage() {
 
                     <div className="pt-3 border-t border-border">
                       <p className="font-bold">
-                        Total: ${order.total.toFixed(2)}
+                        Total: ${order.total}
                       </p>
                     </div>
                   </Card>

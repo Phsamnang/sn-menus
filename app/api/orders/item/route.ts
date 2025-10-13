@@ -13,7 +13,7 @@ export async function POST(req: Request) {
         menuItemId,
         quantity,
         price,
-        totalPrice:new Prisma.Decimal(price).times(quantity)
+        totalPrice: new Prisma.Decimal(price).times(quantity),
       },
     });
     await prisma.order.update({
@@ -29,9 +29,31 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     console.error(error);
+    return NextResponse.json(ApiResponse.error("Failed to create order item"));
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const body = await req.json();
+    const { id, orderId } = body;
+    const orderItem = await prisma.orderItem.findUnique({
+      where: { id },
+    });
+    await prisma.orderItem.delete({
+      where: { id },
+    });
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        total: { decrement: orderItem?.price.times(orderItem?.quantity) },
+      },
+    });
     return NextResponse.json(
-      { status: false, message: "Failed to create order", data: null },
-      { status: 500 }
+      ApiResponse.success("Order item successfully deleted")
     );
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(ApiResponse.error("Failed to delete order item"));
   }
 }

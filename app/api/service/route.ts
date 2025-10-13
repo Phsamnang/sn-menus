@@ -29,6 +29,9 @@ export async function GET() {
       },
       include:{
         table:true
+      },
+      orderBy:{
+        createdAt:"desc"
       }
     });
     
@@ -46,6 +49,7 @@ export async function GET() {
     }));
 
     const mainResult = order.map((order) => ({
+      id:order.id,
       tableName:order.table.number,
       paymentStatus:order.status,
       total:order.total,

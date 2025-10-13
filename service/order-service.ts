@@ -12,5 +12,9 @@ export const orderService = {
   async  getOrderItem():Promise<any>{
      const response =await axios.get('/api/service')
      return response.data.data;
-     }
+     },
+  async deleteItem(id: number, orderId: number): Promise<any> {
+    const response = await axios.delete(`/api/orders/item`, { data: { id, orderId } });
+    return response.data.data;
+  },
 };

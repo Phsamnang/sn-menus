@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { orderService } from "@/service/order-service";
 import { menuItemService } from "@/service/menus-service";
 
@@ -53,12 +53,30 @@ export default function SellerPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-
+  const queryClient = useQueryClient();
 
   const {data:items, isLoading} = useQuery({
     queryKey: ["order-items"],
     queryFn:  () => orderService.getOrderItem(),
   })   
+
+
+  const { mutate: deleteItem } = useMutation({
+    mutationFn:  ({id, orderId}: {id: number, orderId: number}) => orderService.deleteItem(id, orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["order-items"] });
+      toast({
+        title: "Item deleted",
+        description: "Item deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete item",
+      });
+    },
+  });
 
   const markAsPaid = (orderId: string, method: string) => {
     const updatedOrders = orders.map((order) =>
@@ -137,23 +155,23 @@ export default function SellerPage() {
                 <Button
                   variant="outline"
                   size="sm"
-              
                   className="flex-1 sm:flex-none"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">Refresh</span>
                 </Button>
-                {paidOrders?.length > 0 || paidOrders?.length === undefined && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={clearPaidOrders}
-                    className="flex-1 sm:flex-none"
-                  >
-                    <span className="hidden sm:inline">Clear Paid</span>
-                    <span className="sm:hidden">Clear</span>
-                  </Button>
-                )}
+                {paidOrders?.length > 0 ||
+                  (paidOrders?.length === undefined && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearPaidOrders}
+                      className="flex-1 sm:flex-none"
+                    >
+                      <span className="hidden sm:inline">Clear Paid</span>
+                      <span className="sm:hidden">Clear</span>
+                    </Button>
+                  ))}
               </div>
             </div>
           </div>
@@ -190,7 +208,9 @@ export default function SellerPage() {
                 <Check className="h-5 w-5 text-blue-500" />
                 <div>
                   <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold">{completedOrders?.length}</p>
+                  <p className="text-2xl font-bold">
+                    {completedOrders?.length}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -218,12 +238,13 @@ export default function SellerPage() {
             </div>
 
             <div className="space-y-4">
-              {pendingOrders?.length === 0 || pendingOrders?.length === undefined ? (
+              {pendingOrders?.length === 0 ||
+              pendingOrders?.length === undefined ? (
                 <Card className="p-8 text-center">
                   <p className="text-muted-foreground">No pending orders</p>
                 </Card>
               ) : (
-                pendingOrders?.map((order:any) => (
+                pendingOrders?.map((order: any) => (
                   <Card key={order.id} className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -243,7 +264,7 @@ export default function SellerPage() {
                     </div>
 
                     <div className="space-y-2 mb-4">
-                      {order.items?.map((item:any) => (
+                      {order.items?.map((item: any) => (
                         <div key={item.id} className="flex items-center gap-3">
                           <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
                             <Image
@@ -262,16 +283,23 @@ export default function SellerPage() {
                             </p>
                           </div>
                           <p className="text-sm font-semibold text-right">
-                            ${(item.price * item.quantity)}
+                            ${item.price * item.quantity}
                           </p>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() => deleteItem({ id: item.id, orderId: order.id })}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
                       ))}
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-3 border-t border-border gap-2">
-                      <p className="font-bold">
-                        Total: ${order?.total}
-                      </p>
+                      <p className="font-bold">Total: ${order?.total}</p>
                       <Button
                         size="sm"
                         onClick={() => markAsPaid(order.id, "cash")}
@@ -298,14 +326,15 @@ export default function SellerPage() {
             </div>
 
             <div className="space-y-4">
-              {completedOrders?.length === 0 || completedOrders?.length === undefined ? (
+              {completedOrders?.length === 0 ||
+              completedOrders?.length === undefined ? (
                 <Card className="p-8 text-center">
                   <p className="text-muted-foreground">
                     No orders ready for payment
                   </p>
                 </Card>
               ) : (
-                completedOrders?.map((order:any) => (
+                completedOrders?.map((order: any) => (
                   <Card key={order.id} className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -325,7 +354,7 @@ export default function SellerPage() {
                     </div>
 
                     <div className="space-y-2 mb-4">
-                      {order.items.map((item:any) => (
+                      {order.items.map((item: any) => (
                         <div key={item.id} className="flex items-center gap-3">
                           <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
                             <Image
@@ -344,16 +373,14 @@ export default function SellerPage() {
                             </p>
                           </div>
                           <p className="text-sm font-semibold text-right">
-                            ${(item.price * item.quantity)}
+                            ${item.price * item.quantity}
                           </p>
                         </div>
                       ))}
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-3 border-t border-border gap-2">
-                      <p className="font-bold">
-                        Total: ${order.total}
-                      </p>
+                      <p className="font-bold">Total: ${order.total}</p>
                       <Dialog
                         open={
                           isPaymentDialogOpen && selectedOrder?.id === order.id
@@ -382,7 +409,7 @@ export default function SellerPage() {
                                 Order Summary
                               </h4>
                               <div className="space-y-1">
-                                {order.items.map((item:any) => (
+                                {order.items.map((item: any) => (
                                   <div
                                     key={item.id}
                                     className="flex justify-between text-sm"
@@ -390,9 +417,7 @@ export default function SellerPage() {
                                     <span>
                                       {item.name} × {item.quantity}
                                     </span>
-                                    <span>
-                                      ${(item.price * item.quantity)}
-                                    </span>
+                                    <span>${item.price * item.quantity}</span>
                                   </div>
                                 ))}
                               </div>
@@ -490,7 +515,7 @@ export default function SellerPage() {
                   <p className="text-muted-foreground">No paid orders</p>
                 </Card>
               ) : (
-                paidOrders?.map((order:any) => (
+                paidOrders?.map((order: any) => (
                   <Card key={order.id} className="p-4 opacity-75">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -513,7 +538,7 @@ export default function SellerPage() {
                     </div>
 
                     <div className="space-y-2 mb-4">
-                      {order.items.map((item:any) => (
+                      {order.items.map((item: any) => (
                         <div key={item.id} className="flex items-center gap-3">
                           <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
                             <Image
@@ -532,16 +557,14 @@ export default function SellerPage() {
                             </p>
                           </div>
                           <p className="text-sm font-semibold text-right">
-                            ${(item.price * item.quantity)}
+                            ${item.price * item.quantity}
                           </p>
                         </div>
                       ))}
                     </div>
 
                     <div className="pt-3 border-t border-border">
-                      <p className="font-bold">
-                        Total: ${order.total}
-                      </p>
+                      <p className="font-bold">Total: ${order.total}</p>
                     </div>
                   </Card>
                 ))

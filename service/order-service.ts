@@ -17,4 +17,8 @@ export const orderService = {
     const response = await axios.delete(`/api/orders/item`, { data: { id, orderId } });
     return response.data.data;
   },
+  async updateOrder(id: number, status: string): Promise<any> {
+    const response = await axios.put(`/api/orders/${id}`, { status });
+    return response.data.data;
+  },
 };

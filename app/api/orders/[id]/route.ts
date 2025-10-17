@@ -38,29 +38,11 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { status, paymentMethod } = body;
-
-    const updateData: Prisma.OrderUpdateInput = {};
-
-    if (status) {
-      updateData.status = status as OrderStatus;
-    }
-
-    if (paymentMethod) {
-      updateData.paymentMethod = paymentMethod as string    | undefined;
-      updateData.paymentTime = new Date();
-    }
+    const { status } = body;
 
     const order = await prisma.order.update({
       where: { id: parseInt(params.id) },
-      data: updateData,
-      include: {
-        items: {
-          include: {
-            menuItem: true,
-          },
-        },
-      },
+      data: { status:status==="completed" ? OrderStatus.COMPLETED : OrderStatus.PAID as OrderStatus },
     });
 
     return NextResponse.json(ApiResponse.success(order, "Order updated successfully"));

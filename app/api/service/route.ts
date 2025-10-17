@@ -24,15 +24,17 @@ export async function GET() {
 
 
     const order = await prisma.order.findMany({
-      where:{
-        status:OrderStatus.PENDING
+      where: {
+        status: {
+          in: [OrderStatus.PENDING, OrderStatus.COMPLETED], // Use 'in' to specify multiple statuses
+        },
       },
-      include:{
-        table:true
+      include: {
+        table: true,
       },
-      orderBy:{
-        createdAt:"desc"
-      }
+      orderBy: {
+        createdAt: "desc",
+      },
     });
     
     const mappedItems = service.map((item) => ({

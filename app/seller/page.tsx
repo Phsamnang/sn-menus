@@ -78,6 +78,17 @@ export default function SellerPage() {
     },
   });
 
+  const { mutate: updateOrder } = useMutation({
+    mutationFn:  ({id, status}: {id: number, status: string}) => orderService.updateOrder(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["order-items"] });
+      toast({
+        title: "Order updated",
+        description: "Order updated successfully",
+      });
+    },
+  });
+
   const markAsPaid = (orderId: string, method: string) => {
     const updatedOrders = orders.map((order) =>
       order.id === orderId
@@ -124,7 +135,7 @@ export default function SellerPage() {
     (order:any) => order.paymentStatus === "PENDING"
   );
   const completedOrders = filteredOrders?.filter(
-    (order:any) => order.paymentStatus === "completed"
+    (order: any) => order.paymentStatus === "COMPLETED"
   );
   const paidOrders = filteredOrders?.filter((order:any) => order.status === "paid");
 
@@ -302,7 +313,7 @@ export default function SellerPage() {
                       <p className="font-bold">Total: ${order?.total}</p>
                       <Button
                         size="sm"
-                        onClick={() => markAsPaid(order.id, "cash")}
+                        onClick={() => updateOrder({id: Number(order.id) , status: "completed"})}
                         className="w-full sm:w-auto"
                       >
                         <Check className="h-4 w-4 mr-1" />

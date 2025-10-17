@@ -94,6 +94,7 @@ export async function POST(
         menuItemId: i.menuItemId,
         quantity: i.quantity,
         price: new Prisma.Decimal(i.price),
+        totalPrice: new Prisma.Decimal(i.price).times(i.quantity),
       })),
     });
 

@@ -12,23 +12,17 @@ export async function GET() {
       orderBy: {
         id: "desc", // optional: newest first
       },
-      include:{
-        menuItem:true,
-        order:{
-          include:{
-            table:true
-          }
-        }
-      }
-    });
-
-
-    const order = await prisma.order.findMany({
-      where: {
-        status: {
-          in: [OrderStatus.PENDING, OrderStatus.COMPLETED], // Use 'in' to specify multiple statuses
+      include: {
+        menuItem: true,
+        order: {
+          include: {
+            table: true,
+          },
         },
       },
+    });
+
+    const order = await prisma.order.findMany({
       include: {
         table: true,
       },
@@ -36,7 +30,7 @@ export async function GET() {
         createdAt: "desc",
       },
     });
-    
+
     const mappedItems = service.map((item) => ({
       id: item.id,
       quantity: item.quantity,
@@ -47,22 +41,28 @@ export async function GET() {
       name: item.menuItem.name,
       paymentStatus: item.order.status,
       timestamp: item.order.createdAt,
-      total:item.order.total,
+      total: item.order.total,
     }));
 
     const mainResult = order.map((order) => ({
-      id:order.id,
-      tableName:order.table.number,
-      paymentStatus:order.status,
-      total:order.total,
-      items:mappedItems.filter((item) => item.tableNumber === order.table.number),
+      id: order.id,
+      tableName: order.table.number,
+      paymentStatus: order.status,
+      total: order.total,
+      items: mappedItems.filter(
+        (item) => item.tableNumber === order.table.number
+      ),
       timestamp: order.createdAt,
     }));
 
-    return NextResponse.json( ApiResponse.success(mainResult, "Fetched pending menu items successfully"));
+    return NextResponse.json(
+      ApiResponse.success(mainResult, "Fetched pending menu items successfully")
+    );
   } catch (error) {
     console.error("Error fetching pending menu items:", error);
-    return NextResponse.json(ApiResponse.error("Failed to fetch pending menu items"));
+    return NextResponse.json(
+      ApiResponse.error("Failed to fetch pending menu items")
+    );
   }
 }
 export async function POST(request: Request) {

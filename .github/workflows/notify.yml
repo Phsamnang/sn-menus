@@ -29,7 +29,7 @@ jobs:
             
             ---
             
-            👤 **Committer:** ${{ github.actor }}
+            👤 **Committer:** ${{ github.last_name }}
             
             📝 **Commit Message:**
             _${{ github.event.head_commit.message }}_

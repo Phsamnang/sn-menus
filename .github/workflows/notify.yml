@@ -24,11 +24,11 @@ jobs:
           message: |
             ✅ SUCCESSFUL PUSH to ${{ github.ref_name }}
             
-            👤 Actor: ${{ github.actor }}
+            👤 Actor: ${{ github.user_name }}
             🔗 Commit: ${{ github.sha }}
             
-            Repo: ${{ github.repository }}
-            See workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+           # Repo: ${{ github.repository }}
+           # See workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
             
           # Optional: Use Markdown for rich formatting
           format: markdown

@@ -21,7 +21,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_TO }} 
           
           # Optional: The message to send
-         message: |
+          message: |
             🚀 **New Push Detected!**
             
             Repo: `${{ github.repository }}`

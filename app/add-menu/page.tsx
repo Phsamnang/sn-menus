@@ -51,6 +51,7 @@ export default function AddMenuPage() {
     image: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({

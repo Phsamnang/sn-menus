@@ -21,14 +21,24 @@ jobs:
           to: ${{ secrets.TELEGRAM_TO }} 
           
           # Optional: The message to send
-          message: |
-            ✅ SUCCESSFUL PUSH to ${{ github.ref_name }}
+         message: |
+            🚀 **New Push Detected!**
             
-            👤 Actor: ${{ github.user_name }}
-            🔗 Commit: ${{ github.sha }}
+            Repo: `${{ github.repository }}`
+            Branch: `${{ github.ref_name }}`
             
-           # Repo: ${{ github.repository }}
-           # See workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            ---
+            
+            👤 **Committer:** ${{ github.actor }}
+            
+            📝 **Commit Message:**
+            _${{ github.event.head_commit.message }}_
+            
+            ---
+            
+            [➡️ View Commit Details](${{ github.event.head_commit.url }}) 
+            
+            [📦 View Full Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
             
           # Optional: Use Markdown for rich formatting
           format: markdown
